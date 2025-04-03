@@ -36,8 +36,7 @@ jobs:
           pytest -xvs tests/test_create_table_job_direct.py
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_HML }}
-          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID_HML }}
-          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_TOKEN_HML }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_HML }}          
 
   validate_bundle:
     name: Validate Bundle
@@ -65,5 +64,4 @@ jobs:
           databricks bundle validate -t qa
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_HML }}
-          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID_HML }}
-          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_TOKEN_HML }} 
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_HML }}          
