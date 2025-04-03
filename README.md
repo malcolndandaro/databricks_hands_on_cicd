@@ -1,12 +1,63 @@
-# CI/CD Hands-On
+# CI/CD Hands-On com Databricks
 
 Este repositório contém o código e configurações necessárias para o workshop de CI/CD com Databricks.
 
-## Primeiros Passos
+## Índice
 
-### Importando um Job Existente
+1. [Pré-requisitos](#pré-requisitos)
+2. [Passo a Passo](#passo-a-passo)
+   - [Passo 1: Instalação do Databricks CLI](#passo-1-instalação-do-databricks-cli)
+   - [Passo 2: Clone do Repositório](#passo-2-clone-do-repositório)
+   - [Passo 3: Importação de um Job Existente](#passo-3-importação-de-um-job-existente)
+   - [Passo 4: Configuração de Variáveis de Ambiente](#passo-4-configuração-de-variáveis-de-ambiente)
+   - [Passo 5: Deployment em Diferentes Ambientes](#passo-5-deployment-em-diferentes-ambientes)
+3. [Executando Testes](#executando-testes-unitários)
+   - [Sobre o Databricks Connect](#sobre-o-databricks-connect)
+   - [Testes Completos](#pré-requisitos-para-os-testes)
+   - [Testes Simplificados](#testes-simplificados-para-laboratório)
+   - [Testes de Integração](#teste-direto-de-integração)
+4. [GitHub Actions para CI/CD](github-actions.md)
+5. [Referência](#referência)
+   - [Estrutura do Repositório](#estrutura-do-repositório)
 
-Para começar, você precisará importar um job existente do Databricks. Use o seguinte comando:
+## Pré-requisitos
+
+- Python 3.8 ou superior
+- Acesso a um workspace Databricks
+- Token de acesso ao Databricks
+
+## Passo a Passo
+
+### Passo 1: Instalação do Databricks CLI
+
+Instale o Databricks CLI utilizando pip:
+
+```bash
+pip install databricks-cli
+```
+
+Configure o acesso ao Databricks:
+
+```bash
+databricks configure --token
+```
+
+Você será solicitado a fornecer:
+- URL do seu workspace Databricks (ex: https://adb-123456789.4.azuredatabricks.net)
+- Token de acesso pessoal
+
+### Passo 2: Clone do Repositório
+
+Clone este repositório para o seu ambiente local:
+
+```bash
+git clone <URL_DO_REPOSITORIO>
+cd cicd_handson_itau
+```
+
+### (Opcional) Passo 3: Importação de um Job Existente
+
+Para começar, importe um job existente do Databricks:
 
 ```bash
 databricks bundle generate job --existing-job-id 663063874671210 -t dev
@@ -14,13 +65,13 @@ databricks bundle generate job --existing-job-id 663063874671210 -t dev
 
 Onde:
 - `--existing-job-id 663063874671210` especifica o ID do job que você deseja importar
-- `-t dev` especifica o ambiente de destino (target environment) de onde o job será importado. Neste caso, estamos importando do ambiente de desenvolvimento (`dev`).
+- `-t dev` especifica o ambiente de destino (target environment) de onde o job será importado
 
-Este comando irá gerar os arquivos de configuração necessários para que você possa trabalhar com o job localmente e, posteriormente, implantá-lo em diferentes ambientes através do pipeline de CI/CD.
+Este comando irá gerar os arquivos de configuração necessários para que você possa trabalhar com o job localmente.
 
 #### Exemplo de Execução
 
-Quando executamos o comando para importar um job existente, podemos ver que o conteúdo do job é importado para as respectivas pastas do projeto:
+Quando executamos o comando para importar um job existente:
 
 ```bash
 > databricks bundle generate job --existing-job-id 393880860618601 -t dev -p itaudev
@@ -32,19 +83,19 @@ Como podemos observar:
 - O arquivo SQL do job foi salvo no diretório `src/`
 - A configuração do job foi salva no diretório `resources/`
 
-## Configuração de Variáveis de Ambiente
+### Passo 4: Configuração de Variáveis de Ambiente
 
-### Configuração do Catálogo
+#### Configuração do Catálogo
 
-No job importado (lab_cicd_criar_tabela_customers.job.yml), você pode observar que usamos variáveis parametrizadas para garantir a portabilidade entre diferentes ambientes. Uma configuração chave é a referência ao catálogo usando a sintaxe de variável:
+No job importado (lab_cicd_criar_tabela_customers.job.yml), usamos variáveis parametrizadas para garantir a portabilidade entre diferentes ambientes:
 
 ```
 catalogo: ${catalogo}
 ```
 
-Essa abordagem permite que o mesmo job seja executado em diferentes ambientes (dev, qa, prod), utilizando o catálogo apropriado para cada um. O valor da variável `${catalogo}` é substituído automaticamente durante a implantação, com base no ambiente de destino.
+Essa abordagem permite que o mesmo job seja executado em diferentes ambientes (dev, qa, prod), utilizando o catálogo apropriado para cada um.
 
-### Como Funciona
+#### Como Funciona
 
 1. No arquivo `databricks.yml`, definimos os diferentes ambientes e suas respectivas configurações.
 2. Para cada ambiente (target), especificamos o valor que deve ser usado para a variável `catalogo`.
@@ -55,28 +106,26 @@ Por exemplo:
 - No ambiente `qa`, `${catalogo}` pode ser substituído por `catalogo_qa`
 - No ambiente `prod`, `${catalogo}` pode ser substituído por `catalogo_prod`
 
-### Exemplo de Deployment com Target Environment
+### Passo 5: Deployment em Diferentes Ambientes
 
-Para fazer o deployment do job para um ambiente específico, use o comando:
+Para fazer o deployment do job para um ambiente específico:
 
 ```bash
 databricks bundle deploy -t dev
 ```
 
-Este comando implantará o job no ambiente de desenvolvimento (`dev`), substituindo a variável `${catalogo}` pelo valor definido para este ambiente no arquivo `databricks.yml`.
+Este comando implantará o job no ambiente de desenvolvimento (`dev`), substituindo a variável `${catalogo}` pelo valor definido para este ambiente.
 
-Para implantar em outros ambientes, basta alterar o valor do parâmetro `-t`:
+Para implantar em outros ambientes:
 
 ```bash
 databricks bundle deploy -t qa     # Deploy para ambiente de QA
 databricks bundle deploy -t prod   # Deploy para ambiente de produção
 ```
 
-Essa abordagem elimina a necessidade de manter diferentes versões do código para cada ambiente, simplificando a manutenção e reduzindo a chance de erros.
+#### Resultado do Deployment
 
-### Resultado do Deployment
-
-Após executar o comando de deployment para um ambiente específico (neste caso, para o ambiente `dev`), o job será criado no Databricks com o usuário logado como proprietário (owner). Como podemos ver na imagem abaixo, o job "[dev_alfeu_duran] lab_cicd_criar_tabela_customers" foi criado com o usuário "Alfeu Duran" como criador:
+Após executar o comando de deployment, o job será criado no Databricks com o usuário logado como proprietário:
 
 ![Job criado no Databricks](images/workflow.png)
 
@@ -85,27 +134,31 @@ Observe que:
 - O usuário que executou o comando de deployment é automaticamente definido como o proprietário do job
 - As tags do job são preservadas durante o deployment
 
-Isso facilita a identificação de quem é responsável por cada job e em qual ambiente ele está implantado.
-
-## Estrutura do Repositório
-
-- `databricks.yml` - Arquivo de configuração principal do Databricks
-- `src/` - Contém o código fonte dos notebooks e jobs
-- `resources/` - Contém recursos adicionais necessários para os jobs
-
----
-
-*Nota: Esta documentação será complementada ao longo do desenvolvimento do projeto.* 
-
 ## Executando Testes Unitários
 
 Este projeto utiliza pytest para testes unitários e o Databricks Connect para executar testes que interagem com um ambiente Databricks.
 
-### Pré-requisitos para os testes
+### Sobre o Databricks Connect
+
+Databricks Connect é uma biblioteca cliente que permite conectar seu ambiente de desenvolvimento local ao Databricks. Isso possibilita:
+
+- **Desenvolvimento local**: Escrever e testar código localmente antes de implantá-lo no Databricks
+- **Integração contínua**: Executar testes automatizados que interagem com o ambiente Databricks
+- **Depuração remota**: Depurar código que será executado no cluster Databricks diretamente da sua IDE
+
+Com o Databricks Connect, seus testes podem:
+1. Criar e manipular tabelas no Databricks
+2. Executar consultas SQL e verificar resultados
+3. Simular a execução de jobs exatamente como aconteceria no ambiente Databricks
+4. Acessar o Unity Catalog, Delta Lake e outras funcionalidades do Databricks
+
+Isso elimina a necessidade de mocks extensivos e permite testes mais realistas que validam a interação completa com a plataforma Databricks.
+
+### Pré-requisitos para os Testes
 
 1. Instalação das dependências de teste:
    ```bash
-   pip install -r requirements-test.txt
+   pip install -r requirements.txt
    ```
 
 2. Configuração do Databricks Connect:
@@ -121,7 +174,7 @@ Este projeto utiliza pytest para testes unitários e o Databricks Connect para e
    databricks configure --token
    ```
 
-### Executando os testes
+### Executando os Testes
 
 Para executar todos os testes:
 ```bash
@@ -138,7 +191,7 @@ Para executar com informações detalhadas:
 pytest tests/ -v
 ```
 
-### Estrutura dos testes
+### Estrutura dos Testes
 
 Os testes são organizados da seguinte forma:
 
@@ -148,7 +201,7 @@ Os testes utilizam um ambiente isolado no Unity Catalog para não interferir com
 
 ### Testes Simplificados para Laboratório
 
-Para fins de demonstração e laboratório, também fornecemos uma versão simplificada dos testes que não requer configuração do Databricks Connect:
+Para fins de demonstração e laboratório, fornecemos uma versão simplificada dos testes:
 
 ```bash
 # Instalar dependências mínimas
@@ -161,16 +214,14 @@ pytest tests/test_create_table_job_simple.py -v
 ./run_simple_tests.sh
 ```
 
-Estes testes simplificados usam apenas mocks e são ideais para demonstrar:
-1. Como testar a função de obtenção do nome do esquema
-2. Como verificar a recuperação correta do catálogo a partir dos widgets
-3. Como validar os comandos SQL executados
-
-Eles são mais rápidos e não exigem conexão com o Databricks, tornando-os ideais para ambientes de laboratório. 
+Estes testes simplificados:
+1. Testam a função de obtenção do nome do esquema
+2. Verificam a recuperação correta do catálogo a partir dos widgets
+3. Validam os comandos SQL executados
 
 ### Teste Direto de Integração
 
-Também fornecemos um teste de integração direto que executa o script Python e valida se a tabela e schema foram criados corretamente:
+Também fornecemos um teste de integração direto:
 
 ```bash
 # Executar o teste direto
@@ -186,4 +237,14 @@ Este teste:
 3. Valida se todos os dados foram inseridos corretamente
 4. Verifica um registro específico que deve estar presente na tabela
 
-Este teste é ideal para demonstrar como validar os resultados reais produzidos pelo script, sem usar mocks. 
+## Referência
+
+### Estrutura do Repositório
+
+- `databricks.yml` - Arquivo de configuração principal do Databricks
+- `src/` - Contém o código fonte dos notebooks e jobs
+- `resources/` - Contém recursos adicionais necessários para os jobs
+
+---
+
+*Nota: Esta documentação poderá ser atualizada ao longo do desenvolvimento do projeto.* 
