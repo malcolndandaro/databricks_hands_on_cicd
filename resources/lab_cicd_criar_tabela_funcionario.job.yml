@@ -1,9 +1,9 @@
 resources:
   jobs:
-    lab_cicd_criar_tabela_customers:
-      name: lab_cicd_criar_tabela_customers
+    lab_cicd_criar_tabela_funcionario:
+      name: lab_cicd_criar_tabela_funcionario
       tasks:
-        - task_key: cria_tabela_customers
+        - task_key: cria_tabela_funcionario
           email_notifications: {}
           notebook_task:
             base_parameters:

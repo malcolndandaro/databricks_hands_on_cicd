@@ -86,7 +86,7 @@ jobs:
 
       - name: Deploy bundle to qa
         run: |
-          databricks bundle deploy -t qa
+          databricks bundle run lab_cicd_criar_tabela_funcionario  -t qa
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_HML }}
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_HML }}   
