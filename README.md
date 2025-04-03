@@ -76,7 +76,7 @@ Quando executamos o comando para importar um job existente:
 ```bash
 > databricks bundle generate job --existing-job-id 393880860618601 -t dev -p itaudev
 File successfully saved to src/create_table_job.py
-Job configuration successfully saved to resources/rls_column_masking_job.yml
+Job configuration successfully saved to resources/lab_cicd_criar_tabela_funcionario.yml
 ```
 
 Como podemos observar:
@@ -87,7 +87,7 @@ Como podemos observar:
 
 #### Configuração do Catálogo
 
-No job importado (lab_cicd_criar_tabela_customers.job.yml), usamos variáveis parametrizadas para garantir a portabilidade entre diferentes ambientes:
+No job importado (lab_cicd_criar_tabela_funcionario.job.yml.job.yml), usamos variáveis parametrizadas para garantir a portabilidade entre diferentes ambientes:
 
 ```
 catalogo: ${catalogo}
