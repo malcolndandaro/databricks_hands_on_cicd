@@ -1,0 +1,24 @@
+resources:
+  jobs:
+    lab_cicd_criar_tabela_customers:
+      name: lab_cicd_criar_tabela_customers
+      tasks:
+        - task_key: cria_tabela_customers
+          email_notifications: {}
+          notebook_task:
+            base_parameters:
+              catalogo: ${var.catalogo}
+            notebook_path: ../src/create_table_job.py
+            source: WORKSPACE
+          run_if: ALL_SUCCESS
+          webhook_notifications: {}
+      email_notifications: {}
+      max_concurrent_runs: 1
+      queue:
+        enabled: true
+      trigger:
+        pause_status: UNPAUSED
+        periodic:
+          interval: 1
+          unit: DAYS
+      webhook_notifications: {}

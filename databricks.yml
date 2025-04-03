@@ -1,0 +1,31 @@
+# This is a Databricks asset bundle definition for dbx_bundle_github_actions.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+bundle:
+  name: cicd_handson
+  uuid: 49b6dda6-5cb0-432b-9066-b19879cfb3ac
+
+include:
+  - resources/*.yml
+
+variables:
+  catalogo:
+    description: "Catalogo para o ambiente"
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-3240b5ad-6863.cloud.databricks.com/
+      root_path: ~/Workspace/Shared/dev/${bundle.name}
+    variables:
+      catalogo: dev_hands_on
+    
+  qa:
+    mode: production
+    workspace:
+      host: https://dbc-6ebed6cf-b45e.cloud.databricks.com/
+      root_path: /Workspace/DataEngineering/${bundle.name}/${bundle.target}
+    variables:
+      catalogo: hml_hands_on
+  
