@@ -7,13 +7,10 @@ catalog_name = dbutils.widgets.get("catalogo")
 print(f"Using catalog: {catalog_name}")
 
 # Get username and format for schema name
-
-
 def get_schema_name():
     user_name = dbutils.notebook.entry_point.getDbutils().notebook().getContext().userName()
     user_name = user_name.toString().split('@')[0].split('(')[1].replace('.', '_')
     return user_name
-
 
 schema_name = get_schema_name()
 print(f"Using schema: {schema_name}")
