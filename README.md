@@ -2,6 +2,15 @@
 
 Este repositório contém o código e configurações necessárias para o workshop de CI/CD com Databricks.
 
+Por se tratar de um workshop, o código fonte do job foi simplificado para fins didáticos.
+
+Devido à complexidade de demonstrar um cenário end-to-end completo de CI/CD (que envolve Git, CLI, runners e outros objetos externos), este repositório foi preparado com uma estrutura pronta contendo os seguintes assets do Databricks:
+
+- Notebook que cria uma tabela de funcionários
+- Workflow configurado para executar este Notebook
+- Testes unitários previamente definidos
+- Esteira de CI/CD utilizando GitHub Actions já configurada
+
 ## Índice
 
 1. [Pré-requisitos](#pré-requisitos)
@@ -22,9 +31,30 @@ Este repositório contém o código e configurações necessárias para o worksh
 
 ## Pré-requisitos
 
-- Python 3.8 ou superior
+- Conhecimento prévio de Git
+- Conhecimento prévio dos conceitos de CI/CD
 - Acesso a um workspace Databricks
 - Token de acesso ao Databricks
+
+## Ferramentas Utilizadas
+
+Neste workshop, utilizaremos as seguintes ferramentas para implementar o pipeline de CI/CD:
+
+### Databricks CLI
+A [Databricks CLI](https://docs.databricks.com/aws/en/dev-tools/cli/) é uma interface de linha de comando que permite interagir com a plataforma Databricks a partir do seu terminal local ou scripts de automação. Ela encapsula a API REST do Databricks, fornecendo endpoints para modificar ou solicitar informações sobre objetos do workspace Databricks.
+
+### Databricks Asset Bundles
+[Databricks Asset Bundles](https://docs.databricks.com/aws/en/dev-tools/bundles) são uma ferramenta que facilita a adoção de boas práticas de engenharia de software, incluindo controle de código-fonte, revisão de código, testes e integração contínua e entrega (CI/CD) para seus projetos de dados e IA. Os bundles permitem descrever recursos do Databricks como jobs, pipelines e notebooks como arquivos de origem.
+
+### Databricks Connect
+[Databricks Connect](https://docs.databricks.com/aws/en/dev-tools/databricks-connect/python/) é uma biblioteca cliente que permite conectar seu ambiente de desenvolvimento local ao Databricks. Isso possibilita:
+- Desenvolvimento local
+- Integração contínua
+- Depuração remota
+- Execução de testes automatizados que interagem com o ambiente Databricks
+
+### GitHub Actions
+[GitHub Actions](https://github.com/features/actions) é uma plataforma de automação que permite criar fluxos de trabalho de CI/CD diretamente no seu repositório GitHub. Com o GitHub Actions, você pode automatizar, personalizar e executar seus fluxos de trabalho de desenvolvimento de software diretamente no GitHub.
 
 ## Passo a Passo
 
@@ -36,6 +66,9 @@ Instale o Databricks CLI utilizando pip:
 pip install databricks-cli
 ```
 
+Gere o token de acesso ao Databricks (vamos utilizar no proximo passo)
+![Token](/images/token.png)
+
 Configure o acesso ao Databricks:
 
 ```bash
@@ -46,15 +79,19 @@ Você será solicitado a fornecer:
 - URL do seu workspace Databricks (ex: https://adb-123456789.4.azuredatabricks.net)
 - Token de acesso pessoal
 
+Também é possivel utilizar authenticação via browser, caso prefira.
+
 ### Passo 2: Clone do Repositório
 
 Clone este repositório para o seu ambiente local:
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
+git clone https://github.com/databricks-demo-itau/cicd_handson_itau
+
 cd cicd_handson_itau
 ```
-
+O repositorio já está configurado com um job existente, que cria uma tabela de funcionários. e um workflow configurado para executar este job.
+Caso você deseje utilizar um job diferente, você pode seguir o passo 3.
 ### (Opcional) Passo 3: Importação de um Job Existente
 
 Para começar, importe um job existente do Databricks:
@@ -123,6 +160,16 @@ databricks bundle deploy -t qa     # Deploy para ambiente de QA
 databricks bundle deploy -t prod   # Deploy para ambiente de produção
 ```
 
+### Passo 6: Executando o Job
+
+Para executar o job em um ambiente específico:
+
+```bash
+databricks bundle run -t dev
+```
+*Caso exista mais de um job no bundle, será solicitado qual job você deseja executar.*
+
+
 #### Resultado do Deployment
 
 Após executar o comando de deployment, o job será criado no Databricks com o usuário logado como proprietário:
@@ -134,7 +181,7 @@ Observe que:
 - O usuário que executou o comando de deployment é automaticamente definido como o proprietário do job
 - As tags do job são preservadas durante o deployment
 
-## Executando Testes Unitários
+## Executando Testes Unitários e de Integração
 
 Este projeto utiliza pytest para testes unitários e o Databricks Connect para executar testes que interagem com um ambiente Databricks.
 
@@ -160,26 +207,40 @@ Isso elimina a necessidade de mocks extensivos e permite testes mais realistas q
    ```bash
    pip install -r requirements.txt
    ```
+2. Databricks CLI configurada (feito no inicio deste documento)
 
-2. Configuração do Databricks Connect:
-   
-   Exporte as variáveis de ambiente necessárias:
-   ```bash
-   export DATABRICKS_HOST=<seu-host-databricks> # Ex: https://adb-123456789.4.azuredatabricks.net
-   export DATABRICKS_TOKEN=<seu-token-de-acesso>
-   ```
 
-   Ou configure utilizando a CLI do Databricks:
-   ```bash
-   databricks configure --token
-   ```
+
+
+### Estrutura dos Testes
+
+Os testes são organizados da seguinte forma:
+
+- `tests/test_create_table_job.py`: Testes para validar a criação de tabelas e manipulação de dados no Databricks
+
+Estes testes simplificados, Unitarios e de Integração, verificam:
+1. Verificam se a tabela foi criada
+1. Verificam a estrutura da tabela criada (colunas esperadas)
+2. Verificam a contagem de registros inseridos na tabela
+3. Verificam se existem valores nulos no campo CPF
+3. Verificam se um registro específico está presente na tabela
 
 ### Executando os Testes
 
-Para executar todos os testes:
+**Importante**: Os testes estão configurados para serem executados após a criação da tabela no catálogo `hml_hands_on`. Isso é definido no arquivo `tests/test_create_table_job_direct.py`, que verifica a existência e o conteúdo da tabela neste catálogo específico.
+Altere as variaveis de ambiente para o catalogo e schema correto antes de executar os testes.
+
+- O catalogo padrao setado é: `hml_hands_on`  (se estiver rodando no ambiente de dev, alterar para `dev_hands_on`)
+
+- O schema setado é: `alfeu_duran` (alterar para o schema do seu usuário, que foicriado automaticamente no momento que foi executado o job)
+
+
+Para executar todos os testes (após a execução do job e alterar as variaveis no arquivo do pytest):
 ```bash
 pytest tests/
 ```
+
+![Pytest executado com sucesso](images/pytest_test_passed.png)
 
 Para executar um teste específico:
 ```bash
@@ -191,60 +252,97 @@ Para executar com informações detalhadas:
 pytest tests/ -v
 ```
 
-### Estrutura dos Testes
+## Validação de Código Estático com Flake8
 
-Os testes são organizados da seguinte forma:
+O Flake8 é um linter que verifica a qualidade do código Python. Ele é configurado para verificar:
 
-- `tests/test_create_table_job.py`: Testes para validar a criação de tabelas e manipulação de dados no Databricks
+- Erros de sintaxe
+- Erros de estilo
+- Erros de complexidade
 
-Os testes utilizam um ambiente isolado no Unity Catalog para não interferir com os dados de produção. 
+Configuramos o Flake8 para verificar o código no momento do CI/CD com Github Actions.
 
-### Testes Simplificados para Laboratório
 
-Para fins de demonstração e laboratório, fornecemos uma versão simplificada dos testes:
+## GitHub Actions
 
-```bash
-# Instalar dependências mínimas
-pip install -r requirements-test-simple.txt
+Para automatizar o processo de CI/CD, foi configurado um workflow no GitHub Actions. O arquivo `.github/workflows/validate-deploy-qa.yml` define o pipeline que é executado quando um Pull Request é aberto ou atualizado na branch `qa`.
 
-# Executar os testes simplificados
-pytest tests/test_create_table_job_simple.py -v
 
-# Ou usar o script auxiliar
-./run_simple_tests.sh
+
+
+
+O workflow é composto por 5 jobs sequenciais:
+
+1. **Code Quality Check**
+   - Verifica a qualidade do código usando Flake8
+   - Analisa complexidade e estilo do código
+   - Garante que não há erros de sintaxe
+
+2. **Validate Bundle**
+   - Valida a configuração do bundle do Databricks
+   - Verifica se todas as configurações estão corretas para o ambiente QA
+
+3. **Deploy to QA**
+   - Faz o deploy do job para o ambiente QA
+   - Utiliza as credenciais configuradas no GitHub Secrets
+
+4. **Run Job in QA**
+   - Executa o job no ambiente QA
+   - Verifica se o job é executado com sucesso
+
+5. **Run Tests**
+   - Executa os testes unitários e de integração
+   - Verifica se os testes passam após o deploy
+
+Exemplo de configuração do workflow:
+
+```yaml
+name: Validate QA PR
+
+on:
+  pull_request:
+    branches:
+      - qa
+    types: [opened, synchronize, reopened]
+
+jobs:
+  code_quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install Flake8
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+          
+      - name: Run Flake8
+        run: |
+          flake8 src/ --count --select=E9,F63,F7,F82 --ignore=F821 --show-source --statistics
 ```
 
-Estes testes simplificados:
-1. Testam a função de obtenção do nome do esquema
-2. Verificam a recuperação correta do catálogo a partir dos widgets
-3. Validam os comandos SQL executados
+Este workflow garante que:
+- O código está em conformidade com os padrões de qualidade
+- O bundle está configurado corretamente
+- O deploy é realizado com sucesso
+- O job é executado corretamente
+- Os testes passam após o deploy
 
-### Teste Direto de Integração
-
-Também fornecemos um teste de integração direto:
-
-```bash
-# Executar o teste direto
-pytest tests/test_create_table_job_direct.py -v
-
-# Ou usar o script auxiliar
-./run_direct_test.sh
-```
-
-Este teste:
-1. Executa o script create_table_job.py diretamente
-2. Verifica se a tabela foi criada com o schema correto
-3. Valida se todos os dados foram inseridos corretamente
-4. Verifica um registro específico que deve estar presente na tabela
-
-## Referência
-
-### Estrutura do Repositório
-
-- `databricks.yml` - Arquivo de configuração principal do Databricks
-- `src/` - Contém o código fonte dos notebooks e jobs
-- `resources/` - Contém recursos adicionais necessários para os jobs
+Para que o workflow funcione corretamente, é necessário configurar os seguintes secrets no GitHub:
+- `DATABRICKS_HOST_HML`: URL do workspace Databricks
+- `DATABRICKS_TOKEN_HML`: Token de acesso ao Databricks
 
 ---
 
-*Nota: Esta documentação poderá ser atualizada ao longo do desenvolvimento do projeto.* 
+## Referência
+
+- [Databricks CLI](https://docs.databricks.com/aws/en/dev-tools/cli/)
+- [Databricks Asset Bundles](https://docs.databricks.com/aws/en/dev-tools/bundles)
+- [Databricks Connect](https://docs.databricks.com/aws/en/dev-tools/databricks-connect/python/)
