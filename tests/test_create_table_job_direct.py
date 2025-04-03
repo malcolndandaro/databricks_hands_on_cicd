@@ -28,7 +28,7 @@ def test_table_creation(spark_session):
     
     
     # Verifica se a tabela foi criada
-    catalog_name = "dev_hands_on"
+    catalog_name = "hml_hands_on"
     schema_name = "alfeu_duran"
     table_name = "funcionarios"
     
