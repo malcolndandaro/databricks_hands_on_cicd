@@ -46,15 +46,9 @@ def test_table_creation(spark_session):
     for column in expected_columns:
         assert column in columns, f"A coluna {column} não está presente na tabela"
     
-    # Verifica os tipos de dados das colunas
-    schema = df.schema
-    # Verifica se os campos existem no schema usando list comprehension em vez de fieldIndex
-    field_names = [field.name for field in schema.fields]
-    assert "id" in field_names, "Campo 'id' não encontrado"
-    assert "nome" in field_names, "Campo 'nome' não encontrado"
-    assert "departamento" in field_names, "Campo 'departamento' não encontrado"
-    assert "salario" in field_names, "Campo 'salario' não encontrado"
-    assert "cpf" in field_names, "Campo 'cpf' não encontrado"
+    # Verifica se existem valores nulos no campo CPF
+    null_cpf_count = df.filter("cpf IS NULL").count()
+    assert null_cpf_count == 0, f"Existem {null_cpf_count} registros com CPF nulo"
     
     # Verifica um registro específico (o último registro contém o nome do schema)
     user_record = df.filter(f"nome = '{schema_name}'").collect()
