@@ -1,0 +1,38 @@
+name: Deploy to QA
+
+on:
+  pull_request:
+    branches:
+      - qa
+    types: [closed]
+
+jobs:
+  deploy_to_qa:
+    name: Deploy to QA
+    # Só executa se o PR foi merged (não se foi fechado sem merge)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install Databricks CLI
+        run: |
+          echo "Instalando o CLI do Databricks..."
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh
+          which databricks
+
+      - name: Deploy bundle to qa
+        run: |
+          databricks bundle deploy -t qa
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_HML }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID_HML }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_TOKEN_HML }} 
