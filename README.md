@@ -14,19 +14,23 @@ Devido à complexidade de demonstrar um cenário end-to-end completo de CI/CD (q
 ## Índice
 
 1. [Pré-requisitos](#pré-requisitos)
-2. [Passo a Passo](#passo-a-passo)
+2. [Ferramentas Utilizadas](#ferramentas-utilizadas)
+3. [Passo a Passo](#passo-a-passo)
    - [Passo 1: Instalação do Databricks CLI](#passo-1-instalação-do-databricks-cli)
    - [Passo 2: Clone do Repositório](#passo-2-clone-do-repositório)
    - [Passo 3: Importação de um Job Existente](#passo-3-importação-de-um-job-existente)
    - [Passo 4: Configuração de Variáveis de Ambiente](#passo-4-configuração-de-variáveis-de-ambiente)
    - [Passo 5: Deployment em Diferentes Ambientes](#passo-5-deployment-em-diferentes-ambientes)
-3. [Executando Testes](#executando-testes-unitários)
+   - [Passo 6: Executando o Job](#passo-6-executando-o-job)
+4. [Executando Testes Unitários e de Integração](#executando-testes-unitários-e-de-integração)
    - [Sobre o Databricks Connect](#sobre-o-databricks-connect)
-   - [Testes Completos](#pré-requisitos-para-os-testes)
-   - [Testes Simplificados](#testes-simplificados-para-laboratório)
-   - [Testes de Integração](#teste-direto-de-integração)
-4. [GitHub Actions para CI/CD](github-actions.md)
-5. [Referência](#referência)
+   - [Pré-requisitos para os Testes](#pré-requisitos-para-os-testes)
+   - [Estrutura dos Testes](#estrutura-dos-testes)
+   - [Executando os Testes](#executando-os-testes)
+5. [Validação de Código Estático com Flake8](#validação-de-código-estático-com-flake8)
+6. [GitHub Actions](#github-actions)
+   - [Fluxo de Trabalho com GitHub Actions](#fluxo-de-trabalho-com-github-actions)
+7. [Referência](#referência)
    - [Estrutura do Repositório](#estrutura-do-repositório)
 
 ## Pré-requisitos
@@ -267,11 +271,9 @@ Configuramos o Flake8 para verificar o código no momento do CI/CD com Github Ac
 
 Para automatizar o processo de CI/CD, foi configurado um workflow no GitHub Actions. O arquivo `.github/workflows/validate-deploy-qa.yml` define o pipeline que é executado quando um Pull Request é aberto ou atualizado na branch `qa`.
 
+![Workflow do GitHub Actions](images/actions_workflow.png)
 
-
-
-
-O workflow é composto por 5 jobs sequenciais:
+Nossa pipeline será composta por 5 jobs sequenciais, que serão explicados em detalhes abaixo:
 
 1. **Code Quality Check**
    - Verifica a qualidade do código usando Flake8
@@ -293,6 +295,43 @@ O workflow é composto por 5 jobs sequenciais:
 5. **Run Tests**
    - Executa os testes unitários e de integração
    - Verifica se os testes passam após o deploy
+
+
+## Fluxo de Trabalho com GitHub Actions
+Imagem visual sobre o fluxo de trabalho com GitHub Actions:
+
+
+![Fluxo do GitHub Actions](images/github_actions.png)
+
+O fluxo de trabalho com GitHub Actions segue os seguintes passos:
+
+1. **Desenvolvimento na Branch Dev**
+   - Os desenvolvedores realizam seus commits na branch `dev`
+   - Esta é a branch de desenvolvimento onde as novas features são implementadas
+
+2. **Pull Request para QA**
+   - Quando o código está pronto, é criado um Pull Request de `dev` para `qa`
+   - Este processo pode ser automatizado com ferramentas como o GitHub Auto-PR
+   - O PR dispara automaticamente o workflow de validação
+
+3. **Execução do Workflow**
+   - O workflow definido em `.github/workflows/validate-deploy-qa.yml` é executado
+   - Todos os 5 jobs são executados sequencialmente
+   - Qualquer falha em um dos jobs interrompe o processo
+
+4. **Proteção da Branch QA**
+   - A branch `qa` é protegida por regras de branch protection
+   - O merge só é permitido se todos os checks do workflow passarem
+   - Isso garante que apenas código validado chegue ao ambiente de QA
+
+5. **Merge ou Rejeição**
+   - Se todos os checks passarem, o PR pode ser aprovado e merged
+   - Se houver falhas, o PR é bloqueado até que os problemas sejam corrigidos
+   - O desenvolvedor recebe feedback imediato sobre qualquer problema
+
+Este fluxo garante a qualidade do código e a integridade do ambiente de QA, estabelecendo um processo robusto de CI/CD.
+
+
 
 Exemplo de configuração do workflow:
 
