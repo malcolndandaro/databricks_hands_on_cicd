@@ -1,2 +1,4 @@
 pytest
 databricks-connect
+pyyaml
+pytest-mock

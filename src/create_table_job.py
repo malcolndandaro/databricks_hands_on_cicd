@@ -1,12 +1,70 @@
 # Databricks notebook source
 
-from pyspark.sql.types import StructType, StructField, IntegerType, StringType, DoubleType
+from pyspark.sql.types import StructType, StructField, IntegerType, StringType, DoubleType, BooleanType
+from pyspark.sql.functions import udf, col, regexp_replace, length
+
 
 catalog_name = dbutils.widgets.get("catalogo")
 
 print(f"Using catalog: {catalog_name}")
 
 # Get username and format for schema name
+
+
+def validate_cpf(cpf):
+    """
+    Validates a Brazilian CPF number.
+    
+    Args:
+        cpf (str): The CPF string to validate
+        
+    Returns:
+        bool: True if the CPF is valid, False otherwise
+    """
+    # Remove non-digit characters
+    cpf = ''.join(filter(str.isdigit, cpf))
+    
+    # Check if it has 11 digits
+    if len(cpf) != 11:
+        return False
+    
+    # Check if all digits are the same (invalid case)
+    if len(set(cpf)) == 1:
+        return False
+    
+    # Calculate first verification digit
+    sum_of_products = sum(int(cpf[i]) * (10 - i) for i in range(9))
+    expected_digit1 = 0 if sum_of_products % 11 < 2 else 11 - (sum_of_products % 11)
+    
+    # Check first verification digit
+    if int(cpf[9]) != expected_digit1:
+        return False
+    
+    # Calculate second verification digit
+    sum_of_products = sum(int(cpf[i]) * (11 - i) for i in range(10))
+    expected_digit2 = 0 if sum_of_products % 11 < 2 else 11 - (sum_of_products % 11)
+    
+    # Check second verification digit
+    if int(cpf[10]) != expected_digit2:
+        return False
+    
+    return True
+
+def validate_cpf_dataframe(df):
+    """
+    Adds a validation column to a DataFrame indicating if the CPF is valid.
+    
+    Args:
+        df (DataFrame): A Spark DataFrame containing a 'cpf' column
+        
+    Returns:
+        DataFrame: The input DataFrame with a validation column added
+    """
+    # Register the UDF
+    validate_cpf_udf = udf(validate_cpf, BooleanType())
+    
+    # Add validation column
+    return df.withColumn("cpf_valido", validate_cpf_udf(col("cpf")))
 
 
 def get_schema_name():
@@ -44,6 +102,9 @@ data = [
     (4, "Ana Costa", "Financeiro", 5500.00, "789.123.456-00"),
     (5, "Carlos Santos", "Financeiro", 6000.00, "321.654.987-00"),
     (6, schema_name, "Financeiro", 6000.00, "123.456.789-10")
+    
+    
+    
 ]
 
 schema = StructType([
@@ -56,10 +117,10 @@ schema = StructType([
 
 df = spark.createDataFrame(data, schema)
 
+df = df.transform(validate_cpf_dataframe)
+
 # Save DataFrame as a table
-df.write.format("delta").mode("overwrite").saveAsTable("funcionarios")
+df.write.format("delta").mode("overwrite").option("mergeSchema", "true").saveAsTable("funcionarios")
 
-# Verify data was inserted
-result = spark.sql("SELECT * FROM funcionarios")
 
-display(result)
+
