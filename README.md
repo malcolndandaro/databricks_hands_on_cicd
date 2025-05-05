@@ -1,5 +1,6 @@
 # CI/CD Hands-On com Databricks
 
+--
 Este repositório contém o código e configurações necessárias para o workshop de CI/CD com Databricks.
 
 Por se tratar de um workshop, o código fonte do job foi simplificado para fins didáticos.
